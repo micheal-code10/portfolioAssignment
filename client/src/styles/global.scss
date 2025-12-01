@@ -1,0 +1,24 @@
+:root {
+  --bg: #0e0f13;
+  --text: #f2f4f8;
+  --muted: #a8b0bd;
+  --accent: #6ae3ff;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { font-family: system-ui, Arial, sans-serif; background: #0f1115; color: #e7eaf0; }
+a { color: inherit; }
