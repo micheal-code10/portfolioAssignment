@@ -46,20 +46,20 @@ app.use("/api/qualifications", qualificationRoutes);
 app.use("/api/users", userRoutes);
 
 // ===== SERVE REACT FRONTEND (client/dist) =====
-// Render build command creates client/dist, then Express serves it.
 const clientDistPath = path.join(__dirname, "client", "dist");
 
 if (process.env.NODE_ENV === "production" && fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
 
-  // React Router fallback (must be AFTER API routes)
-  app.get("*", (req, res) => {
+  // React Router fallback (REGEX, avoids Express "*" crash)
+  // and avoids catching /api routes
+  app.get(/^(?!\/api).*/, (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
 
 // ===== DB CONNECTION + SERVER START =====
-const MONGO_URI = config.mongoUri; // comes from process.env.MONGO_URI in config.js
+const MONGO_URI = config.mongoUri; // reads process.env.MONGO_URI in config/config.js
 const PORT = process.env.PORT || config.port || 3000;
 
 mongoose
@@ -73,5 +73,3 @@ mongoose
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
   });
-
-
