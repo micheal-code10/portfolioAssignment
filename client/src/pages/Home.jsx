@@ -1,69 +1,75 @@
-// src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import api from "../api";
 
-const Home = () => {
+export default function Home() {
   const [projects, setProjects] = useState([]);
   const [qualifications, setQualifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadData = async () => {
+    const load = async () => {
       try {
-        const [projRes, qualRes] = await Promise.all([
-          api.get("/projects"),          // GET /api/projects
-          api.get("/qualifications"),    // GET /api/qualifications
+        setError("");
+        setLoading(true);
+
+        const [pRes, qRes] = await Promise.all([
+          api.get("/projects"),
+          api.get("/qualifications"),
         ]);
 
-        setProjects(projRes.data);
-        setQualifications(qualRes.data);
-      } catch (err) {
-        console.error("Home load error", err);
+        setProjects(pRes.data || []);
+        setQualifications(qRes.data || []);
+      } catch (e) {
+        console.error(e);
         setError("Could not load portfolio data.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadData();
+    load();
   }, []);
 
   return (
-    <div>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px" }}>
       <h1>My Portfolio</h1>
+
+      {/* ✅ CI/CD proof line (this is what you’ll screenshot before/after) */}
+      <p style={{ fontWeight: 600 }}>
+        CI/CD demo update: Dec 2, 2025
+      </p>
+
       <p>Welcome to my portfolio site.</p>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: "crimson" }}>{error}</p>}
 
-      <section>
+      <section style={{ marginTop: 20 }}>
         <h2>Projects</h2>
-        {projects.length === 0 ? (
-          <p>No projects yet.</p>
-        ) : (
-          <ul>
-            {projects.map((p) => (
-              <li key={p._id}>
-                <strong>{p.title}</strong> – {p.description}
-              </li>
-            ))}
-          </ul>
-        )}
+        {!loading && projects.length === 0 && <p>No projects yet.</p>}
+        <ul>
+          {projects.map((p) => (
+            <li key={p._id}>
+              <strong>{p.title || p.name}</strong>
+              {p.description ? ` — ${p.description}` : ""}
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <section>
+      <section style={{ marginTop: 20 }}>
         <h2>Qualifications</h2>
-        {qualifications.length === 0 ? (
-          <p>No qualifications yet.</p>
-        ) : (
-          <ul>
-            {qualifications.map((q) => (
-              <li key={q._id}>
-                <strong>{q.school}</strong> – {q.program} ({q.year})
-              </li>
-            ))}
-          </ul>
-        )}
+        {!loading && qualifications.length === 0 && <p>No qualifications yet.</p>}
+        <ul>
+          {qualifications.map((q) => (
+            <li key={q._id}>
+              <strong>{q.title || q.name}</strong>
+              {q.description ? ` — ${q.description}` : ""}
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
-};
-
-export default Home;
+}
