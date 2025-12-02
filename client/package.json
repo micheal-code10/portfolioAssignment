@@ -4,10 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently 'vite' \"nodemon ../server.js\"",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview"}
+
+  ,
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
