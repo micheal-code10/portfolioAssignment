@@ -1,4 +1,4 @@
-// server.js  (root of portfolioAssignment)
+// server.js (root of portfolioAssignment)
 
 import express from "express";
 import mongoose from "mongoose";
@@ -12,27 +12,30 @@ import projectRoutes from "./server/routes/project.routes.js";
 import qualificationRoutes from "./server/routes/qualification.routes.js";
 import userRoutes from "./server/routes/user.routes.js";
 
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
 const app = express();
 
-// ===== MIDDLEWARE =====
+// Needed for __dirname in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// CORS: for development, reflect whatever origin is calling (so 5173/5174/5175 all work)
+// ===== MIDDLEWARE =====
 app.use(
   cors({
-    origin: true,        // dynamically sets Access-Control-Allow-Origin to the request origin
-    credentials: true,   // allow cookies (needed for JWT token)
+    origin: true, // allows render domain + localhost ports
+    credentials: true,
   })
 );
 
-// Parse JSON request bodies
 app.use(express.json());
-
-// Parse cookies
 app.use(cookieParser());
 
-// Simple health check route
-app.get("/", (req, res) => {
-  res.send("✅ Backend is running properly");
+// Health check (does NOT hijack homepage)
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, message: "Backend is running properly" });
 });
 
 // ===== API ROUTES =====
@@ -42,20 +45,33 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/qualifications", qualificationRoutes);
 app.use("/api/users", userRoutes);
 
+// ===== SERVE REACT FRONTEND (client/dist) =====
+// Render build command creates client/dist, then Express serves it.
+const clientDistPath = path.join(__dirname, "client", "dist");
+
+if (process.env.NODE_ENV === "production" && fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+
+  // React Router fallback (must be AFTER API routes)
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
 // ===== DB CONNECTION + SERVER START =====
-const MONGO_URI =
-  config.mongoUri || config.MONGO_URI || config.dbUri || config.db;
-const PORT = config.port || config.PORT || 3000;
+const MONGO_URI = config.mongoUri; // comes from process.env.MONGO_URI in config.js
+const PORT = process.env.PORT || config.port || 3000;
 
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
   });
-  
+
+
